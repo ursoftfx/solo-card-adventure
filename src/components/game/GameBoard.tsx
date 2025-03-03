@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Pile from './Pile';
 import Card from './Card';
@@ -36,8 +37,12 @@ const GameBoard: React.FC = () => {
     newGame();
     
     const initAds = async () => {
-      console.log('Initializing Unity Ads');
-      await adsService.current.initialize();
+      try {
+        console.log('Initializing Unity Ads');
+        await adsService.current.initialize();
+      } catch (error) {
+        console.log('Unity Ads initialization error, continuing without ads');
+      }
     };
     
     initAds();
@@ -73,10 +78,15 @@ const GameBoard: React.FC = () => {
 
   const newGame = () => {
     if (gameCount > 0) {
-      adsService.current.showInterstitial(() => {
-        console.log('New game started after ad');
+      try {
+        adsService.current.showInterstitial(() => {
+          console.log('New game started after ad');
+          startNewGame();
+        });
+      } catch (error) {
+        console.log('Error showing interstitial ad, starting new game anyway');
         startNewGame();
-      });
+      }
     } else {
       startNewGame();
       setGameCount(prev => prev + 1);
@@ -110,14 +120,19 @@ const GameBoard: React.FC = () => {
 
   const redo = () => {
     if (future.length === 0) {
-      adsService.current.showRewardedAd(
-        () => {
-          toast.success('Here\'s a hint: Look for cards you can move to the foundation piles');
-        },
-        () => {
-          toast.error('Watch the full ad to get a hint');
-        }
-      );
+      try {
+        adsService.current.showRewardedAd(
+          () => {
+            toast.success('Here\'s a hint: Look for cards you can move to the foundation piles');
+          },
+          () => {
+            toast.error('Watch the full ad to get a hint');
+          }
+        );
+      } catch (error) {
+        console.log('Error showing rewarded ad, showing hint anyway');
+        toast.success('Here\'s a hint: Look for cards you can move to the foundation piles');
+      }
       return;
     }
     

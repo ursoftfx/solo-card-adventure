@@ -17,6 +17,7 @@ class UnityAdsService {
   private static instance: UnityAdsService;
   private isInitialized: boolean = false;
   private initializationInProgress: boolean = false;
+  private isAdBlockerDetected: boolean = false;
   private config: UnityAdsConfig = {
     gameId: "5806082",
     testMode: process.env.NODE_ENV !== "production",
@@ -48,7 +49,7 @@ class UnityAdsService {
       await this.loadUnityAdsSDK();
       
       // Wait a short time to make sure the script is fully loaded
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (typeof window.UnityAds !== 'undefined') {
         // Initialize Unity Ads SDK
@@ -59,11 +60,13 @@ class UnityAdsService {
         );
         console.log('Unity Ads initialization started');
       } else {
-        console.error('Unity Ads SDK failed to load or is blocked by an ad blocker');
+        console.log('Unity Ads SDK failed to load or is blocked by an ad blocker');
+        this.isAdBlockerDetected = true;
         this.initializationInProgress = false;
       }
     } catch (error) {
-      console.error('Failed to initialize Unity Ads:', error);
+      console.log('Failed to initialize Unity Ads, continuing without ads');
+      this.isAdBlockerDetected = true;
       this.initializationInProgress = false;
     }
   }
@@ -76,7 +79,8 @@ class UnityAdsService {
       this.isInitialized = true;
       this.loadBanner();
     } else {
-      console.error('Unity Ads initialization failed:', initStatus);
+      console.log('Unity Ads initialization failed, continuing without ads');
+      this.isAdBlockerDetected = true;
     }
   }
 
@@ -87,25 +91,35 @@ class UnityAdsService {
         return;
       }
 
+      // Set a timeout to catch if script loading takes too long
+      const timeout = setTimeout(() => {
+        console.log('Unity Ads SDK loading timed out');
+        this.isAdBlockerDetected = true;
+        resolve(); // Resolve anyway to continue app flow
+      }, 5000);
+
       const script = document.createElement('script');
       // Use the CDN URL from Unity documentation
       script.src = "https://static.unityads.unity3d.com/sdk/3.8.0/UnityAds.js";
       script.async = true;
       script.onload = () => {
+        clearTimeout(timeout);
         console.log('Unity Ads SDK loaded successfully');
         resolve();
       };
       script.onerror = () => {
-        console.error('Failed to load Unity Ads SDK - likely blocked by an ad blocker');
-        reject(new Error('Failed to load Unity Ads SDK'));
+        clearTimeout(timeout);
+        console.log('Unity Ads SDK failed to load - likely blocked by an ad blocker');
+        this.isAdBlockerDetected = true;
+        resolve(); // Resolve anyway to continue app flow
       };
       document.head.appendChild(script);
     });
   }
 
   public showInterstitial(onComplete?: () => void): void {
-    if (!this.isInitialized || typeof window.UnityAds === 'undefined') {
-      console.warn('Unity Ads not initialized, skipping interstitial ad');
+    if (!this.isInitialized || typeof window.UnityAds === 'undefined' || this.isAdBlockerDetected) {
+      console.log('Unity Ads not available, skipping interstitial ad');
       if (onComplete) onComplete();
       return;
     }
@@ -123,19 +137,19 @@ class UnityAdsService {
           }
         });
       } else {
-        console.warn('Interstitial ad not ready');
+        console.log('Interstitial ad not ready');
         if (onComplete) onComplete();
       }
     } catch (error) {
-      console.error('Error showing interstitial ad:', error);
+      console.log('Error showing interstitial ad, continuing without showing ad');
       if (onComplete) onComplete();
     }
   }
 
   public showRewardedAd(onRewarded?: () => void, onSkipped?: () => void): void {
-    if (!this.isInitialized || typeof window.UnityAds === 'undefined') {
-      console.warn('Unity Ads not initialized, skipping rewarded ad');
-      if (onSkipped) onSkipped();
+    if (!this.isInitialized || typeof window.UnityAds === 'undefined' || this.isAdBlockerDetected) {
+      console.log('Unity Ads not available, skipping rewarded ad');
+      if (onRewarded) onRewarded(); // Still give reward if ads aren't available
       return;
     }
 
@@ -156,18 +170,18 @@ class UnityAdsService {
           }
         });
       } else {
-        console.warn('Rewarded ad not ready');
-        if (onSkipped) onSkipped();
+        console.log('Rewarded ad not ready, giving reward anyway');
+        if (onRewarded) onRewarded(); // Still give reward if ad isn't ready
       }
     } catch (error) {
-      console.error('Error showing rewarded ad:', error);
-      if (onSkipped) onSkipped();
+      console.log('Error showing rewarded ad, giving reward anyway');
+      if (onRewarded) onRewarded(); // Still give reward on error
     }
   }
 
   public loadBanner(): void {
-    if (!this.isInitialized || typeof window.UnityAds === 'undefined') {
-      console.warn('Unity Ads not initialized, skipping banner ad');
+    if (!this.isInitialized || typeof window.UnityAds === 'undefined' || this.isAdBlockerDetected) {
+      console.log('Unity Ads not available, skipping banner ad');
       return;
     }
 
@@ -186,19 +200,21 @@ class UnityAdsService {
           position: "BOTTOM_CENTER"
         });
       } else {
-        console.warn('Unity Ads Banner module not available');
+        console.log('Unity Ads Banner module not available');
       }
     } catch (error) {
-      console.error('Failed to load banner ad:', error);
+      console.log('Failed to load banner ad, continuing without banner');
     }
   }
   
   public destroyBanner(): void {
+    if (this.isAdBlockerDetected) return;
+    
     if (typeof window.UnityAds !== 'undefined' && window.UnityAds.Banner) {
       try {
         window.UnityAds.Banner.destroy();
       } catch (error) {
-        console.error('Error destroying banner:', error);
+        console.log('Error destroying banner, continuing');
       }
     }
   }
