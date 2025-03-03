@@ -1,10 +1,13 @@
 
 import React from 'react';
 import GameBoard from '@/components/game/GameBoard';
+import { Toaster } from 'sonner';
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-b from-[#1D4E3D] to-[#0F2E20] p-4 md:p-8">
+      <Toaster position="top-center" expand={false} richColors />
+      
       <header className="w-full max-w-5xl text-center mb-6">
         <h1 className="text-3xl md:text-4xl font-light text-white mb-2">Solitaire</h1>
         <p className="text-white/70 text-sm md:text-base">A minimalist card game experience</p>

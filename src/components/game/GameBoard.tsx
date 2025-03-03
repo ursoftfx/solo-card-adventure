@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Pile from './Pile';
 import Card from './Card';
@@ -16,6 +15,7 @@ import {
   autoComplete
 } from '@/lib/solitaire';
 import { toast } from 'sonner';
+import UnityAdsService from '@/services/UnityAdsService';
 
 const GameBoard: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(initializeGame());
@@ -29,13 +29,22 @@ const GameBoard: React.FC = () => {
   const [isWinAnimationActive, setIsWinAnimationActive] = useState(false);
   
   const boardRef = useRef<HTMLDivElement>(null);
+  const adsService = useRef<UnityAdsService>(UnityAdsService.getInstance());
 
-  // Initialize game
   useEffect(() => {
     newGame();
+    
+    const initAds = async () => {
+      await adsService.current.initialize();
+    };
+    
+    initAds();
+    
+    return () => {
+      adsService.current.cleanup();
+    };
   }, []);
 
-  // Set up drag event listeners
   useEffect(() => {
     if (draggedCards) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -47,7 +56,6 @@ const GameBoard: React.FC = () => {
     }
   }, [draggedCards]);
 
-  // Check for win
   useEffect(() => {
     if (gameState.isWon && !isWinAnimationActive) {
       setIsWinAnimationActive(true);
@@ -58,6 +66,10 @@ const GameBoard: React.FC = () => {
   }, [gameState.isWon]);
 
   const newGame = () => {
+    if (gameState?.moves > 0) {
+      adsService.current.showInterstitial();
+    }
+    
     const initialState = initializeGame();
     setGameState(initialState);
     setHistory([]);
@@ -83,36 +95,39 @@ const GameBoard: React.FC = () => {
   };
 
   const redo = () => {
-    if (future.length === 0) return;
-    
-    const nextState = future[0];
-    setHistory(prev => [...prev, gameState]);
-    setGameState(nextState);
-    setFuture(prev => prev.slice(1));
+    adsService.current.showRewardedAd(
+      () => {
+        if (future.length === 0) return;
+        
+        const nextState = future[0];
+        setHistory(prev => [...prev, gameState]);
+        setGameState(nextState);
+        setFuture(prev => prev.slice(1));
+        toast.success('Hint revealed!');
+      },
+      () => {
+        toast.error('Watch the full ad to get a hint');
+      }
+    );
   };
 
   const handleCardClick = (card: CardType) => {
-    // Handle stock pile clicks
     if (gameState.stock.length > 0 && gameState.stock[gameState.stock.length - 1].id === card.id) {
       saveToHistory(gameState);
       setGameState(drawCard(gameState));
       return;
     }
     
-    // Handle empty stock pile clicks (recycle waste)
     if (gameState.stock.length === 0 && gameState.waste.length > 0 && !card.id) {
       saveToHistory(gameState);
       setGameState(drawCard(gameState));
       return;
     }
     
-    // Handle tableau and foundation automatic moves
     if (card.faceUp) {
-      // Try to move to foundation
       for (let i = 0; i < gameState.foundation.length; i++) {
         const foundationPile = gameState.foundation[i];
         if (canPlaceOnFoundation(card, foundationPile[foundationPile.length - 1])) {
-          // Find source pile
           if (gameState.waste.length > 0 && gameState.waste[gameState.waste.length - 1].id === card.id) {
             saveToHistory(gameState);
             setGameState(moveCard(
@@ -183,7 +198,6 @@ const GameBoard: React.FC = () => {
     }
     
     if (dropTarget) {
-      // Check if move is valid
       const topDraggedCard = draggedCards[0];
       const destinationType = dropTarget.type;
       const destinationIndex = dropTarget.index;
@@ -276,7 +290,6 @@ const GameBoard: React.FC = () => {
       
       <div className="game-board" ref={boardRef}>
         <div className="flex flex-col gap-8">
-          {/* Top row: Stock, Waste, and Foundation piles */}
           <div className="grid grid-cols-7 gap-2">
             <div className="col-span-1">
               <Pile
@@ -315,7 +328,6 @@ const GameBoard: React.FC = () => {
             ))}
           </div>
           
-          {/* Bottom row: Tableau piles */}
           <div className="grid grid-cols-7 gap-2">
             {gameState.tableau.map((pile, index) => (
               <div key={`tableau-${index}`} className="col-span-1">

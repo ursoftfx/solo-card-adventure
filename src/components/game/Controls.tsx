@@ -36,6 +36,11 @@ const Controls: React.FC<ControlsProps> = ({
     toast('Auto-completing game');
   };
 
+  const handleShowHint = () => {
+    toast('Loading hint video...');
+    onRedo();
+  };
+
   return (
     <div className="flex flex-wrap gap-2 justify-center">
       <Button 
@@ -69,11 +74,10 @@ const Controls: React.FC<ControlsProps> = ({
       <Button 
         variant="outline"
         className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border-white/20"
-        onClick={onRedo}
-        disabled={!canRedo}
+        onClick={handleShowHint}
       >
         <Sparkles className="mr-2 h-4 w-4" />
-        Hint
+        Get Hint
       </Button>
     </div>
   );
