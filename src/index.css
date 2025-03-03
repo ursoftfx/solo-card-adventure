@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -97,5 +98,85 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .playing-card {
+    @apply relative bg-solitaire-card rounded-lg shadow-md transition-all duration-150 select-none;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    width: 80px;
+    height: 112px;
+  }
+
+  .playing-card-inner {
+    @apply relative w-full h-full rounded-lg transition-transform duration-300;
+    transform-style: preserve-3d;
+  }
+
+  .playing-card.flipped .playing-card-inner {
+    @apply animate-card-flip;
+    transform: rotateY(180deg);
+  }
+
+  .playing-card-front, .playing-card-back {
+    @apply absolute w-full h-full rounded-lg flex flex-col justify-between p-1 overflow-hidden backface-visibility-hidden;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .playing-card-back {
+    @apply bg-blue-800;
+    transform: rotateY(180deg);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, 
+                      transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, 
+                      transparent 75%, transparent);
+    background-size: 8px 8px;
+  }
+
+  .card-dragging {
+    @apply z-50 opacity-90 shadow-xl;
+  }
+
+  .card-suit-heart, .card-suit-diamond {
+    @apply text-solitaire-red;
+  }
+
+  .card-suit-spade, .card-suit-club {
+    @apply text-solitaire-black;
+  }
+
+  .card-value-corner {
+    @apply text-xs font-bold;
+  }
+
+  .card-suit-corner {
+    @apply text-xs;
+  }
+
+  .solitaire-pile {
+    @apply relative min-h-[120px] rounded-lg border-2 border-white/10 border-dashed;
+  }
+
+  .solitaire-tableau-pile {
+    min-height: 300px;
+  }
+
+  .solitaire-foundation-pile {
+    @apply bg-white/5;
+  }
+
+  .solitaire-waste-pile {
+    @apply overflow-hidden;
+  }
+
+  .solitaire-droppable-highlight {
+    @apply border-2 border-white/30 border-solid bg-white/5;
+  }
+
+  .game-board {
+    @apply bg-solitaire-table p-4 md:p-8 rounded-xl shadow-inner w-full min-h-screen md:min-h-0 overflow-hidden;
   }
 }
