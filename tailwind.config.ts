@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -67,8 +66,13 @@ export default {
 				solitaire: {
 					'table': '#27724C',
 					'card': '#FFFFFF',
-					'red': '#D42929',
-					'black': '#0A0A0A'
+					'red': '#E11D48',
+					'black': '#0F172A',
+					'heart': '#E11D48',
+					'diamond': '#EF4444',
+					'club': '#1E293B',
+					'spade': '#0F172A',
+					'card-back': '#1E40AF'
 				}
 			},
 			borderRadius: {

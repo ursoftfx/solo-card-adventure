@@ -72,7 +72,7 @@ const Card: React.FC<CardProps> = ({
               </div>
             </div>
             
-            <div className={`flex justify-center items-center text-2xl card-suit-${card.suit}`}>
+            <div className={`flex justify-center items-center text-3xl card-suit-${card.suit}`}>
               {suitSymbols[card.suit]}
             </div>
             
@@ -86,7 +86,13 @@ const Card: React.FC<CardProps> = ({
             </div>
           </div>
         ) : (
-          <div className="playing-card-back" />
+          <div className="playing-card-back bg-gradient-to-br from-blue-800 to-blue-600">
+            <div className="h-full w-full flex items-center justify-center">
+              <div className="h-2/3 w-2/3 rounded-full bg-blue-500/30 flex items-center justify-center">
+                <div className="h-1/2 w-1/2 rounded-full bg-white/20"></div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

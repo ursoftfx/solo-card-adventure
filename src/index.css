@@ -140,12 +140,24 @@
     @apply z-50 opacity-90 shadow-xl;
   }
 
-  .card-suit-heart, .card-suit-diamond {
-    @apply text-solitaire-red;
+  .card-suit-heart {
+    @apply text-rose-600;
+    text-shadow: 0 0 1px rgba(225, 29, 72, 0.4);
   }
 
-  .card-suit-spade, .card-suit-club {
-    @apply text-solitaire-black;
+  .card-suit-diamond {
+    @apply text-red-500;
+    text-shadow: 0 0 1px rgba(239, 68, 68, 0.4);
+  }
+
+  .card-suit-spade {
+    @apply text-slate-900;
+    text-shadow: 0 0 1px rgba(15, 23, 42, 0.4);
+  }
+
+  .card-suit-club {
+    @apply text-slate-800;
+    text-shadow: 0 0 1px rgba(30, 41, 59, 0.4);
   }
 
   .card-value-corner {
