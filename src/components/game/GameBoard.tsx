@@ -27,7 +27,8 @@ const GameBoard: React.FC = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dropTarget, setDropTarget] = useState<{ type: PileType; index: number } | null>(null);
   const [isWinAnimationActive, setIsWinAnimationActive] = useState(false);
-  
+  const [gameCount, setGameCount] = useState(0);
+
   const boardRef = useRef<HTMLDivElement>(null);
   const adsService = useRef<UnityAdsService>(UnityAdsService.getInstance());
 
@@ -35,6 +36,7 @@ const GameBoard: React.FC = () => {
     newGame();
     
     const initAds = async () => {
+      console.log('Initializing Unity Ads');
       await adsService.current.initialize();
     };
     
@@ -62,14 +64,26 @@ const GameBoard: React.FC = () => {
       toast.success('Congratulations! You won!', {
         duration: 5000,
       });
+      
+      setTimeout(() => {
+        adsService.current.showInterstitial();
+      }, 1500);
     }
   }, [gameState.isWon]);
 
   const newGame = () => {
-    if (gameState?.moves > 0) {
-      adsService.current.showInterstitial();
+    if (gameCount > 0) {
+      adsService.current.showInterstitial(() => {
+        console.log('New game started after ad');
+        startNewGame();
+      });
+    } else {
+      startNewGame();
+      setGameCount(prev => prev + 1);
     }
-    
+  };
+  
+  const startNewGame = () => {
     const initialState = initializeGame();
     setGameState(initialState);
     setHistory([]);
@@ -95,20 +109,22 @@ const GameBoard: React.FC = () => {
   };
 
   const redo = () => {
-    adsService.current.showRewardedAd(
-      () => {
-        if (future.length === 0) return;
-        
-        const nextState = future[0];
-        setHistory(prev => [...prev, gameState]);
-        setGameState(nextState);
-        setFuture(prev => prev.slice(1));
-        toast.success('Hint revealed!');
-      },
-      () => {
-        toast.error('Watch the full ad to get a hint');
-      }
-    );
+    if (future.length === 0) {
+      adsService.current.showRewardedAd(
+        () => {
+          toast.success('Here\'s a hint: Look for cards you can move to the foundation piles');
+        },
+        () => {
+          toast.error('Watch the full ad to get a hint');
+        }
+      );
+      return;
+    }
+    
+    const nextState = future[0];
+    setHistory(prev => [...prev, gameState]);
+    setGameState(nextState);
+    setFuture(prev => prev.slice(1));
   };
 
   const handleCardClick = (card: CardType) => {
