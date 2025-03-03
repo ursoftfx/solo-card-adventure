@@ -122,7 +122,7 @@
   }
 
   .playing-card-front, .playing-card-back {
-    @apply absolute w-full h-full rounded-lg flex flex-col justify-between p-1 overflow-hidden backface-visibility-hidden;
+    @apply absolute w-full h-full rounded-lg flex flex-col justify-between p-1 overflow-hidden;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
   }
