@@ -20,6 +20,11 @@ const Index = () => {
       </header>
       
       <main className="w-full max-w-5xl flex-1 flex flex-col items-center">
+        {/* Game Section - Moved to top of content */}
+        <div className="w-full overflow-hidden rounded-xl shadow-2xl mb-8">
+          <GameBoard />
+        </div>
+        
         <div className="w-full mb-6">
           <Card className="bg-white/5 backdrop-blur-md border-white/10 text-white mb-4">
             <CardHeader className="pb-2">
@@ -137,10 +142,6 @@ const Index = () => {
               </ul>
             </CollapsibleContent>
           </Collapsible>
-        </div>
-        
-        <div className="w-full overflow-hidden rounded-xl shadow-2xl">
-          <GameBoard />
         </div>
         
         <div className="w-full mt-8">
